@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ChatBot from "./ChatBot";
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
@@ -79,20 +80,12 @@ export default function ChatWidget() {
   return (
     <>
       {/* Floating button */}
-      <button
-        onClick={() => setOpen((prev) => !prev)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-emerald-600 rounded-full flex items-center justify-center shadow-lg hover:bg-emerald-700 transition"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="white"
-        >
-          <path d="M12 8l6 8H6z" />
-        </svg>
-      </button>
+    <button
+  onClick={() => setOpen((prev) => !prev)}
+  className="fixed bottom-6 right-6 w-14 h-14 bg-transparent flex items-center justify-center shadow-lg hover:size-38 rounded-full focus:outline-none transform z-[9999]"
+>
+  <ChatBot size={60} />
+</button>
 
       {/* Chat box */}
       {open && (
