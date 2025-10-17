@@ -1,5 +1,9 @@
 flask
 pandas
+<<<<<<< HEAD
 numpy
+=======
+numpy==2.0.2
+>>>>>>> upstream/main
 scikit-learn
 xgboost
