@@ -10,7 +10,7 @@ export default function Analyze() {
   const [temp, setTemp] = useState(26.4);
   const [moisture, setMoisture] = useState(44);
   const [humidity, setHumidity] = useState(58);
-  const [predictedFertilizer, setPredictedFertilizer] = useState(null);
+  const [predictedFertilizer, setPredictedFertilizer] = useState(null); 
 
 
   const [soilType, setSoilType] = useState("Loamy");
@@ -219,7 +219,7 @@ export default function Analyze() {
               />
             </div>
 
-            <AnimatePresence>
+            <AnimatePresence>   
               {predictedFertilizer && (
                 <motion.div
                   key="fertilizer-box"
