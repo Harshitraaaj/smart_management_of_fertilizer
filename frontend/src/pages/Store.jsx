@@ -1,71 +1,42 @@
 import React from "react";
 import { ShoppingCart } from "lucide-react";
-import Navbar from "../components/NavBar";
+import Navbar from "../components/NavBar/";
+import { useTranslation } from "react-i18next";
 
 export default function Store() {
+  const { t } = useTranslation("store");
+
   const fertilizers = [
-    {
-      name: "Vermicompost Organic",
-      desc: "Eco-friendly organic compost that enriches soil and improves aeration.",
-      img: "/vermicompost.png",
-      link: "https://amzn.in/d/de03dlt",
-    },
-    {
-      name: "DAP (Diammonium Phosphate)",
-      desc: "Rich source of nitrogen and phosphorus for healthy roots and flowering.",
-      img: "/DAP.png",
-      link: "https://amzn.in/d/43ct8lN",
-    },
-    {
-      name: "NPK 19:19:19",
-      desc: "Balanced nutrient mix ensuring overall plant growth and yield improvement.",
-      img: "/NPK.png",
-      link: "https://amzn.in/d/erTNAL9",
-    },
-    {
-      name: "Urea Fertilizer",
-      desc: "High nitrogen content for rapid plant growth and greener leaves.",
-      img: "/UREA.png",
-      link: "https://amzn.in/d/gLUL46x",
-    },
-    {
-      name: "Potash (MOP)",
-      desc: "Essential potassium fertilizer to improve fruit quality and disease resistance.",
-      img: "/potash.png",
-      link: "https://amzn.in/d/1f80PlB",
-    },
-     {
-      name: "Potash (MOP)",
-      desc: "Essential potassium fertilizer to improve fruit quality and disease resistance.",
-      img: "/potash.png",
-      link: "https://amzn.in/d/1f80PlB",
-    },
+    "/vermicompost.png",
+    "/DAP.png",
+    "/NPK.png",
+    "/UREA.png",
+    "/potash.png",
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white text-gray-800">
+      <Navbar />
 
-        <Navbar />
-        
       {/* Header Section */}
       <section className="text-center py-16">
         <h1 className="text-4xl md:text-5xl font-bold text-green-700 mb-4">
-          Fertilizer Store
+          {t("header.title")}
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Browse our curated selection of top fertilizers to enhance your crop yield and soil health.
+          {t("header.subtitle")}
         </p>
       </section>
 
       {/* Store Grid */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 px-6 md:px-16 pb-20">
-        {fertilizers.map((item, index) => (
+        {t("products", { returnObjects: true }).map((item, index) => (
           <div
             key={index}
             className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
           >
             <img
-              src={item.img}
+              src={fertilizers[index]}
               alt={item.name}
               className="h-56 w-full object-contain bg-gray-50 p-4"
             />
@@ -77,13 +48,13 @@ export default function Store() {
                 <p className="text-gray-600 text-sm mb-4">{item.desc}</p>
               </div>
               <a
-                href={item.link}
+                href="#"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 bg-green-700 text-white py-2 rounded-lg hover:bg-green-800 transition"
               >
                 <ShoppingCart size={18} />
-                <span>Buy on Amazon</span>
+                <span>{item.linkText}</span>
               </a>
             </div>
           </div>

@@ -1,0 +1,29 @@
+{
+  "heading": {
+    "title": "Adubu Khangbada",
+    "subtitle": "Nupa-fam leipham amasung oiba fam thourangna thokpa phaoba hinggatpa"
+  },
+  "steps": [
+    {
+      "title": "Nupa-fam Phangba",
+      "desc": "Nupa-fam gi mangonda nungshibi amasung maramda punsi thokpa punsida hakchang amadi nungshibi"
+    },
+    {
+      "title": "Hannaba Yengba",
+      "desc": "Khurum, khadam amasung tongba thabak punsi thokpa punsida hakchang amadi nungshibi"
+    },
+    {
+      "title": "Maringda Yengba",
+      "desc": "Pham punsi thokpa punsida khurum amasung mangonda nungshibi leiriba phaoba"
+    },
+    {
+      "title": "Mapokpagi Phangba",
+      "desc": "Nupa-fam gi maramda mam pH amasung type-gi nungaiba"
+    }
+  ],
+  "cta": {
+    "title": "Nupa-fam leipham amasung oiba thokpa phaoba khangbada?",
+    "subtitle": "Adubu nupa-fam gi yengba amasung nungshibi thokpa punsi leiriba",
+    "button": "Nupa-fam Phangba"
+  }
+}

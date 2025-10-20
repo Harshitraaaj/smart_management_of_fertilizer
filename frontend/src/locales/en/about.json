@@ -1,0 +1,56 @@
+{
+  "hero": {
+    "title": "Building the Future Together",
+    "description": "We are a passionate team committed to innovation, excellence, and driving change in sustainable agriculture."
+  },
+  "mission": {
+    "heading": "Our Mission",
+    "para1": "Founded with the vision to transform agriculture through technology, we started small and grew into a trusted partner for sustainable farming solutions. Our focus is on developing intelligent systems that enhance soil health, optimize fertilizer usage, and improve crop yield.",
+    "para2": "Every day, we work tirelessly to deliver innovative solutions that empower farmers and agritech companies to achieve their goals and exceed expectations.",
+    "stats": {
+      "customers": "Customers",
+      "satisfaction": "Satisfaction Rate",
+      "team": "Team Members",
+      "support": "Support"
+    }
+  },
+  "values": {
+    "heading": "Our Core Values",
+    "description": "These principles guide everything we do and shape our company culture.",
+    "list": {
+      "mission_driven": {
+        "title": "Mission-Driven",
+        "description": "We are dedicated to making a real impact through sustainable and effective solutions."
+      },
+      "innovation_first": {
+        "title": "Innovation First",
+        "description": "We continuously explore new opportunities to advance modern agriculture and technology."
+      },
+      "team_collaboration": {
+        "title": "Team Collaboration",
+        "description": "We achieve excellence through teamwork, empowering everyone in the process."
+      },
+      "customer_focused": {
+        "title": "Customer Focused",
+        "description": "Our customers are our top priority — we aim to exceed their expectations every time."
+      }
+    }
+  },
+  "team": {
+    "heading": "Meet Our Leadership",
+    "description": "Experienced professionals dedicated to driving innovation and success.",
+    "members": {
+      "harshit": "CEO",
+      "sachin": "Marketing Head",
+      "alok": "Senior Developer",
+      "gaurav": "Design Head"
+    }
+  },
+  "contact": {
+    "heading": "Get in Touch",
+    "description": "Have questions or collaboration ideas? We’d love to hear from you.",
+    "email": "Email",
+    "phone": "Phone",
+    "button": "Get Started"
+  }
+}

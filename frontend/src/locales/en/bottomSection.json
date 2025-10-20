@@ -1,0 +1,29 @@
+{
+  "heading": {
+    "title": "How It Works",
+    "subtitle": "Three simple steps to optimize your crop management"
+  },
+  "steps": [
+    {
+      "title": "Crop Analysis",
+      "desc": "Get detailed insights about your crop's optimal growing conditions"
+    },
+    {
+      "title": "Precise Requirements",
+      "desc": "Receive accurate water, fertilizer, and temperature recommendations"
+    },
+    {
+      "title": "Yield Prediction",
+      "desc": "Estimate your expected crop yield based on field conditions"
+    },
+    {
+      "title": "Soil Optimization",
+      "desc": "Learn about the ideal soil pH and type for your crops"
+    }
+  ],
+  "cta": {
+    "title": "Ready to optimize your crops?",
+    "subtitle": "Start analyzing your crop requirements today and maximize your yield",
+    "button": "Analyze Your Crop"
+  }
+}

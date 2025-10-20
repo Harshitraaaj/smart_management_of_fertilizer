@@ -3,15 +3,16 @@ import { Link } from "react-router-dom";
 import AnimatedLogo from "../components/AnimatedLogo";
 import { ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
+import { useTranslation } from "react-i18next";
 
 export default function Analyze() {
-  const [npk, setNpk] = useState({ N: 40, P: 25, K: 18 });
-  const [temp, setTemp] = useState(26.4);
-  const [moisture, setMoisture] = useState(44);
-  const [humidity, setHumidity] = useState(58);
-  const [predictedFertilizer, setPredictedFertilizer] = useState(null); 
+  const { t } = useTranslation("analyze"); // Use analyze namespace
 
+  const [npk, setNpk] = useState({ N: 0, P: 0, K: 0 });
+  const [temp, setTemp] = useState(0);
+  const [moisture, setMoisture] = useState(0);
+  const [humidity, setHumidity] = useState(0);
+  const [predictedFertilizer, setPredictedFertilizer] = useState(null);
 
   const [soilType, setSoilType] = useState("Loamy");
   const [cropType, setCropType] = useState("Wheat");
@@ -28,7 +29,6 @@ export default function Analyze() {
     localStorage.setItem("sf_history", JSON.stringify(history));
   }, [history]);
 
-  // 🔄 Fetch live data every 3 seconds
   useEffect(() => {
     const fetchLiveData = () => {
       fetch("http://10.116.113.148:5000/live_data")
@@ -49,15 +49,13 @@ export default function Analyze() {
         .catch((err) => console.error("Error fetching live sensor data:", err));
     };
 
-    fetchLiveData(); // fetch immediately once
-    const interval = setInterval(fetchLiveData, 3000); // refresh every 3 seconds
+    fetchLiveData();
+    const interval = setInterval(fetchLiveData, 3000);
     return () => clearInterval(interval);
   }, []);
 
-  // 🧮 Fetch prediction from backend on Submit
   function handleSubmit(e) {
     e.preventDefault();
-
     const payload = { cropType, soilType };
 
     fetch("http://10.116.113.148:5000/predict", {
@@ -70,7 +68,6 @@ export default function Analyze() {
         return res.json();
       })
       .then((data) => {
-        // Update gauges with prediction response
         setTemp(data.Temperature);
         setHumidity(data.Humidity);
         setMoisture(data.Moisture);
@@ -81,8 +78,6 @@ export default function Analyze() {
         });
         setPredictedFertilizer(data.predicted_fertilizer);
 
-
-        // Add to history
         const record = {
           id: Date.now(),
           timestamp: new Date().toLocaleString(),
@@ -167,7 +162,6 @@ export default function Analyze() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-6">
-        {/* Header */}
         <header className="flex items-center justify-between mb-8">
           <div>
             <Link
@@ -175,7 +169,7 @@ export default function Analyze() {
               className="inline-flex items-center gap-2 hover:bg-green-100 px-3 py-2 rounded-xl font-medium"
             >
               <ArrowLeft />
-              <span className="hidden sm:inline">Back to Home</span>
+              <span className="hidden sm:inline">{t("header.title")}</span>
             </Link>
           </div>
           <div className="flex-1 flex flex-col items-center">
@@ -183,35 +177,32 @@ export default function Analyze() {
               <AnimatedLogo />
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-green-600">
-              Enter Crop Details
+              {t("header.title")}
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Provide information about your crop to get optimal requirements
-            </p>
+            <p className="text-sm text-gray-500 mt-1">{t("header.subtitle")}</p>
           </div>
           <div className="w-24" />
         </header>
 
-        {/* Gauges and Form */}
         <section className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm mb-6">
           <div className="flex flex-col items-center">
             <div className="flex flex-wrap justify-center md:justify-between gap-8 w-full max-w-3xl mb-6">
               <CircularGauge
-                label="Temperature (°C)"
+                label={t("gauges.temperature")}
                 value={temp}
-                max={60}
+                max={100}
                 size={150}
                 colorClass="text-red-500"
               />
               <CircularGauge
-                label="Moisture (%)"
+                label={t("gauges.moisture")}
                 value={moisture}
                 max={100}
                 size={150}
                 colorClass="text-blue-500"
               />
               <CircularGauge
-                label="Humidity (%)"
+                label={t("gauges.humidity")}
                 value={humidity}
                 max={100}
                 size={150}
@@ -219,7 +210,7 @@ export default function Analyze() {
               />
             </div>
 
-            <AnimatePresence>   
+            <AnimatePresence>
               {predictedFertilizer && (
                 <motion.div
                   key="fertilizer-box"
@@ -230,7 +221,7 @@ export default function Analyze() {
                   className="mt-4 w-full max-w-2xl bg-green-100 border border-green-300 text-green-800 px-6 py-3 rounded-lg shadow-md text-center"
                 >
                   <h2 className="text-lg font-semibold">
-                    Recommended Fertilizer:
+                    {t("predictedFertilizer")}
                     <span className="ml-2 text-green-700 font-bold">
                       {predictedFertilizer}
                     </span>
@@ -243,39 +234,33 @@ export default function Analyze() {
               <form onSubmit={handleSubmit} className="bg-white">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                   <label className="text-sm text-gray-700 md:col-span-1 flex items-center">
-                    Soil type
+                    {t("form.soilType")}
                   </label>
                   <select
                     value={soilType}
                     onChange={(e) => setSoilType(e.target.value)}
                     className="md:col-span-2 border rounded-md px-3 py-2 w-full"
                   >
-                    <option>Loamy</option>
-                    <option>Sandy</option>
-                    <option>Clayey</option>
-                    <option>Black</option>
-                    <option>Red</option>
+                    {t("form.soilOptions", { returnObjects: true }).map(
+                      (s, idx) => (
+                        <option key={idx}>{s}</option>
+                      )
+                    )}
                   </select>
 
                   <label className="text-sm text-gray-700 md:col-span-1 flex items-center">
-                    Crop
+                    {t("form.crop")}
                   </label>
                   <select
                     value={cropType}
                     onChange={(e) => setCropType(e.target.value)}
                     className="md:col-span-2 border rounded-md px-3 py-2 w-full"
                   >
-                    <option>Barley</option>
-                    <option>Cotton</option>
-                    <option>Ground Nuts</option>
-                    <option>Maize</option>
-                    <option>Millets</option>
-                    <option>Oil seeds</option>
-                    <option>Paddy</option>
-                    <option>Pulses</option>
-                    <option>Sugarcane</option>
-                    <option>Tobacco</option>
-                    <option>Wheat</option>
+                    {t("form.cropOptions", { returnObjects: true }).map(
+                      (c, idx) => (
+                        <option key={idx}>{c}</option>
+                      )
+                    )}
                   </select>
 
                   <div className="md:col-span-3 flex gap-3 justify-start mt-2">
@@ -283,14 +268,14 @@ export default function Analyze() {
                       type="submit"
                       className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800"
                     >
-                      Submit
+                      {t("form.submit")}
                     </button>
                     <button
                       type="button"
                       onClick={handleClearHistory}
                       className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-400"
                     >
-                      Clear History
+                      {t("form.clearHistory")}
                     </button>
                   </div>
                 </div>
@@ -299,21 +284,15 @@ export default function Analyze() {
           </div>
         </section>
 
-        {/* NPK and History */}
         <div className="flex flex-col md:flex-row gap-6">
-          {/* NPK box */}
           <aside className="w-full md:w-1/3 border border-gray-300 rounded-lg p-6 bg-white shadow-sm">
-            <h3 className="text-lg font-medium mb-4 text-gray-800">Soil NPK</h3>
+            <h3 className="text-lg font-medium mb-4 text-gray-800">
+              {t("npk.title")}
+            </h3>
             {["N", "P", "K"].map((key) => (
               <div key={key} className="mb-6">
                 <div className="flex justify-between text-sm mb-2 text-gray-700">
-                  <span className="font-medium">
-                    {key === "N"
-                      ? "Nitrogen (N)"
-                      : key === "P"
-                      ? "Phosphorus (P)"
-                      : "Potassium (K)"}
-                  </span>
+                  <span className="font-medium">{t(`npk.${key}`)}</span>
                   <span>{npk[key]}</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
@@ -332,21 +311,18 @@ export default function Analyze() {
             ))}
           </aside>
 
-          {/* History box */}
           <section className="flex-1 border border-gray-300 rounded-lg p-6 bg-white shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-medium text-gray-800">
-                Prediction history
+                {t("history.title")}
               </h4>
               <div className="text-sm text-gray-500">
-                {history.length} records
+                {history.length} {t("history.records")}
               </div>
             </div>
             <div className="max-h-64 overflow-auto divide-y">
               {history.length === 0 && (
-                <div className="text-gray-500">
-                  No history yet — click Submit to add a record.
-                </div>
+                <div className="text-gray-500">{t("history.noRecords")}</div>
               )}
               {history.map((rec) => (
                 <div key={rec.id} className="py-3">

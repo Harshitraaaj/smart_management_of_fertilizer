@@ -1,0 +1,33 @@
+{
+  "header": {
+    "title": "Fertilizer Store",
+    "subtitle": "Browse our curated selection of top fertilizers to enhance your crop yield and soil health."
+  },
+  "products": [
+    {
+      "name": "Vermicompost Organic",
+      "desc": "Eco-friendly organic compost that enriches soil and improves aeration.",
+      "linkText": "Buy on Amazon"
+    },
+    {
+      "name": "DAP (Diammonium Phosphate)",
+      "desc": "Rich source of nitrogen and phosphorus for healthy roots and flowering.",
+      "linkText": "Buy on Amazon"
+    },
+    {
+      "name": "NPK 19:19:19",
+      "desc": "Balanced nutrient mix ensuring overall plant growth and yield improvement.",
+      "linkText": "Buy on Amazon"
+    },
+    {
+      "name": "Urea Fertilizer",
+      "desc": "High nitrogen content for rapid plant growth and greener leaves.",
+      "linkText": "Buy on Amazon"
+    },
+    {
+      "name": "Potash (MOP)",
+      "desc": "Essential potassium fertilizer to improve fruit quality and disease resistance.",
+      "linkText": "Buy on Amazon"
+    }
+  ]
+}

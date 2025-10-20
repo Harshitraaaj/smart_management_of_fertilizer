@@ -1,0 +1,44 @@
+{
+  "header": {
+    "title": "Enter Crop Details",
+    "subtitle": "Provide information about your crop to get optimal requirements",
+    "back": "Back to Home"
+  },
+  "gauges": {
+    "temperature": "Temperature (°C)",
+    "moisture": "Moisture (%)",
+    "humidity": "Humidity (%)"
+  },
+  "predictedFertilizer": "Recommended Fertilizer:",
+  "form": {
+    "soilType": "Soil type",
+    "crop": "Crop",
+    "soilOptions": ["Loamy", "Sandy", "Clayey", "Black", "Red"],
+    "cropOptions": [
+      "Barley",
+      "Cotton",
+      "Ground Nuts",
+      "Maize",
+      "Millets",
+      "Oil seeds",
+      "Paddy",
+      "Pulses",
+      "Sugarcane",
+      "Tobacco",
+      "Wheat"
+    ],
+    "submit": "Submit",
+    "clearHistory": "Clear History"
+  },
+  "npk": {
+    "title": "Soil NPK",
+    "N": "Nitrogen (N)",
+    "P": "Phosphorus (P)",
+    "K": "Potassium (K)"
+  },
+  "history": {
+    "title": "Prediction history",
+    "noRecords": "No history yet — click Submit to add a record.",
+    "records": "records"
+  }
+}
