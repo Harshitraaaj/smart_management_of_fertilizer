@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import ChatBot from "./ChatBot";
 
 export default function ChatWidget() {
@@ -15,6 +15,16 @@ export default function ChatWidget() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const chatContainerRef = useRef(null); // For auto-scroll
+
+  // Auto-scroll when messages change
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
 
   async function sendMessage() {
     if (!input.trim()) return;
@@ -36,19 +46,9 @@ export default function ChatWidget() {
       let botMessage;
 
       if (data?.reply) {
-        // Plain text reply (for greetings, casual talk)
         botMessage = { role: "bot", text: data.reply };
       } else if (data?.answer || data?.explanation || data?.example) {
-        // Structured response
-        const botContent = {
-          answer: data.answer || [],
-          explanation: data.explanation || [],
-          example: data.example || [],
-        };
-        botMessage = { role: "bot", content: botContent };
-      } else if (typeof data === "string") {
-        // Fallback for plain string
-        botMessage = { role: "bot", text: data };
+        botMessage = { role: "bot", content: data };
       } else {
         botMessage = {
           role: "bot",
@@ -63,15 +63,10 @@ export default function ChatWidget() {
       setMessages((prev) => [...prev, botMessage]);
     } catch (err) {
       console.error(err);
-      const botMessage = {
-        role: "bot",
-        content: {
-          answer: ["Sorry, something went wrong. Try again."],
-          explanation: [],
-          example: [],
-        },
-      };
-      setMessages((prev) => [...prev, botMessage]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "Sorry, something went wrong. Try again." },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -79,22 +74,24 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* Floating button */}
-    <button
-  onClick={() => setOpen((prev) => !prev)}
-  className="fixed bottom-6 right-6 w-14 h-14 bg-transparent flex items-center justify-center shadow-lg hover:size-38 rounded-full focus:outline-none transform z-[9999]"
->
-  <ChatBot size={60} />
-</button>
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-white flex items-center justify-center shadow-lg rounded-full z-50 focus:outline-none"
+      >
+        <ChatBot size={60} />
+      </button>
 
-      {/* Chat box */}
       {open && (
-        <div className="fixed bottom-24 right-6 w-80 h-96 bg-white border border-gray-300 rounded-lg shadow-lg flex flex-col overflow-hidden">
+        <div className="fixed bottom-24 right-6 w-80 h-96 bg-white border border-gray-300 rounded-lg shadow-lg flex flex-col overflow-hidden z-50">
           <div className="bg-emerald-600 text-white px-4 py-2 font-semibold">
             Chat Support
           </div>
 
-          <div className="flex-1 p-2 overflow-auto flex flex-col gap-2">
+          {/* Chat messages */}
+          <div
+            className="flex-1 p-2 overflow-auto flex flex-col gap-2"
+            ref={chatContainerRef} // Attach ref for auto-scroll
+          >
             {messages.map((msg, idx) =>
               msg.role === "bot" ? (
                 msg.text ? (
@@ -107,20 +104,17 @@ export default function ChatWidget() {
                 ) : (
                   <div
                     key={idx}
-                    className="bg-gray-100 text-gray-800 self-start px-3 py-2 rounded-md text-sm flex flex-col gap-1"
+                    className="bg-gray-100 text-gray-800 self-start px-3 py-2 rounded-md text-sm flex flex-col gap-2"
                   >
                     {msg.content.answer?.length > 0 && (
-                      <div>
-                        <strong></strong>
-                        <ul className="list-disc list-inside ml-4">
-                          {msg.content.answer.map((pt, i) => (
-                            <ul key={i}>{pt}</ul>
-                          ))}
-                        </ul>
-                      </div>
+                      <ul className="list-disc list-inside ml-4">
+                        {msg.content.answer.map((pt, i) => (
+                          <ul key={i}>{pt}</ul>
+                        ))}
+                      </ul>
                     )}
                     {msg.content.explanation?.length > 0 && (
-                      <div className="mt-1">
+                      <div>
                         <strong>Explanation:</strong>
                         <ul className="list-disc list-inside ml-4">
                           {msg.content.explanation.map((pt, i) => (
@@ -130,7 +124,7 @@ export default function ChatWidget() {
                       </div>
                     )}
                     {msg.content.example?.length > 0 && (
-                      <div className="mt-1">
+                      <div>
                         <strong>Example:</strong>
                         <ul className="list-disc list-inside ml-4">
                           {msg.content.example.map((pt, i) => (
@@ -151,9 +145,10 @@ export default function ChatWidget() {
               )
             )}
 
+            {/* Typing indicator */}
             {loading && (
               <div className="text-gray-500 text-sm animate-pulse">
-                Typing...
+                Bot is typing...
               </div>
             )}
           </div>
