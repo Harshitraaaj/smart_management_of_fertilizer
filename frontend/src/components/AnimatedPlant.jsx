@@ -1,6 +1,6 @@
 import React from "react";
 import Lottie from "lottie-react";
-import plantAnimation from "../assets/plant.json"; // adjust path if needed
+import plantAnimation from "../assets/plant.json"; 
 
 export default function AnimatedPlant({ size = 120, loop = true }) {
   return (

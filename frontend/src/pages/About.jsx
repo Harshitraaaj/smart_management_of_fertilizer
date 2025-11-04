@@ -7,23 +7,39 @@ import team2 from "../assets/team-2.jpg";
 import team3 from "../assets/team-3.jpg";
 import team4 from "../assets/team-4.jpg";
 import Navbar from "../components/Navbar/";
-import i18n from "../i18n"; // make sure the path is correct
+import i18n from "../i18n"; 
+
+/* Animated Logo*/ 
+function VideoAnimation({ src, className = "", ariaLabel = "Mission animation" }) {
+  return (
+    <div className={`w-[500px] md:w-96 ${className}`} aria-hidden="false" aria-label={ariaLabel}>
+      <video
+        src={src}
+        autoPlay
+        muted
+        loop
+        playsInline
+        disablePictureInPicture
+        controlsList="nodownload nofullscreen noremoteplayback"
+        className="w-full h-auto bg-transparent rounded-none shadow-none object-contain transition-transform duration-300 hover:scale-105"
+        aria-hidden="true"
+      >
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  );
+}
 
 
 const About = () => {
   const { t } = useTranslation("about");
 
-  // Simple Card component
-  const Card = ({ children, className, style }) => (
-    <div
-      className={`rounded-2xl p-6 shadow-md bg-white ${className}`}
-      style={style}
-    >
+  const Card = ({ children, className, style, ...props }) => (
+    <div className={`rounded-2xl p-6 shadow-md bg-white ${className}`} style={style} {...props}>
       {children}
     </div>
   );
 
-  // Simple Button component
   const Button = ({ children, className, onClick }) => (
     <button
       className={`bg-green-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-green-700 hover:scale-105 transition-transform duration-300 ${className}`}
@@ -34,22 +50,10 @@ const About = () => {
   );
 
   const values = [
-    {
-      key: "mission_driven",
-      icon: Target,
-    },
-    {
-      key: "innovation_first",
-      icon: Lightbulb,
-    },
-    {
-      key: "team_collaboration",
-      icon: Users,
-    },
-    {
-      key: "customer_focused",
-      icon: Heart,
-    },
+    { key: "mission_driven", icon: Target },
+    { key: "innovation_first", icon: Lightbulb },
+    { key: "team_collaboration", icon: Users },
+    { key: "customer_focused", icon: Heart },
   ];
 
   const team = [
@@ -59,22 +63,13 @@ const About = () => {
     { name: "Gaurav Tiwari", role: "gaurav", image: team4 },
   ];
 
-  const stats = [
-    { value: "500+", label: "customers" },
-    { value: "98%", label: "satisfaction" },
-    { value: "50+", label: "team" },
-    { value: "24/7", label: "support" },
-  ];
+ 
+  const videoUrl =
+    "https://cdnl.iconscout.com/lottie/premium/preview-watermark/environment-animated-icon-gif-download-9600621.mp4";
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white">
       <Navbar />
-
-      {/* Language Switcher */}
-      <div className="flex justify-end gap-4 p-4">
-        <button onClick={() => i18n.changeLanguage("en")}>English</button>
-        <button onClick={() => i18n.changeLanguage("hi")}>हिंदी</button>
-      </div>
 
       {/* Hero Section */}
       <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
@@ -84,46 +79,41 @@ const About = () => {
         >
           <div className="absolute inset-0 bg-gradient-to-br from-green-700/95 via-green-500/85 to-green-700/95 backdrop-blur-[2px]" />
         </div>
+
         <div className="relative z-10 text-center px-6 max-w-5xl mx-auto animate-fade-in py-20">
           <h1 className="text-6xl md:text-7xl font-bold text-green-50 mb-8 tracking-tight">
-            {t("hero.title")}
+            {t ? t("hero.title") : "Smart Fertilizer Management"}
           </h1>
           <p className="text-xl md:text-2xl text-green-50/95 leading-relaxed max-w-3xl mx-auto">
-            {t("hero.description")}
+            {t ? t("hero.description") : "Data-driven recommendations for efficient, sustainable farming."}
           </p>
         </div>
       </section>
 
-      {/* Mission Section */}
-      <section className="py-24 px-6 bg-gradient-to-b from-background via-green-100/20 to-background">
+      {/* Mission Section (transparent background; no PiP video) */}
+      <section className="py-24 px-6 bg-transparent">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center animate-fade-in">
+            {/* Left text */}
             <div className="space-y-6">
-              <h2 className="text-5xl font-bold mb-8 bg-gradient-to-r from-green-600 to-green-400 bg-clip-text text-transparent">
-                {t("mission.heading")}
+              <h2 className="text-5xl font-bold mb-8 text-green-600">
+                {t ? t("mission.heading") : "Our Mission"}
               </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                {t("mission.para1")}
+              <p className="text-lg text-gray-800 leading-relaxed">
+                Founded to bring practical technology to farming, we help growers improve soil health,
+                reduce unnecessary fertilizer use, and increase yields.
               </p>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                {t("mission.para2")}
+              <p className="text-lg text-gray-800 leading-relaxed">
+                Using data from sensors, satellite imagery, and field trials, we deliver simple,
+                actionable recommendations that save cost and boost productivity. Our team works
+                directly with farmers and agribusiness partners to ensure solutions are easy to use
+                and deliver measurable results.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-6">
-              {stats.map((stat, index) => (
-                <Card
-                  key={index}
-                  className="text-center hover:shadow-2xl hover:scale-105 transition-all duration-300"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="text-5xl font-bold bg-gradient-to-br from-green-600 to-green-400 bg-clip-text text-transparent mb-3">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {t(`mission.stats.${stat.label}`)}
-                  </div>
-                </Card>
-              ))}
+
+            {/* Right video visual — NO background, NO PiP, NO download/fullscreen */}
+            <div className="flex items-center justify-center">
+              <VideoAnimation src={videoUrl} />
             </div>
           </div>
         </div>
@@ -134,10 +124,10 @@ const About = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20 animate-fade-in">
             <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-green-600 to-green-400 bg-clip-text text-transparent">
-              {t("values.heading")}
+              {t ? t("values.heading") : "Our Values"}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              {t("values.description")}
+              {t ? t("values.description") : "We build practical tools that empower farmers and agribusiness."}
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -151,10 +141,10 @@ const About = () => {
                   <value.icon className="w-8 h-8 text-green-600" />
                 </div>
                 <h3 className="text-xl font-bold mb-4">
-                  {t(`values.list.${value.key}.title`)}
+                  {t ? t(`values.list.${value.key}.title`) : value.key.replace("_", " ")}
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  {t(`values.list.${value.key}.description`)}
+                  {t ? t(`values.list.${value.key}.description`) : ""}
                 </p>
               </Card>
             ))}
@@ -163,14 +153,14 @@ const About = () => {
       </section>
 
       {/* Team Section */}
-      <section className="py-24 px-6 bg-gradient-to-b from-green-100/20 via-background to-green-100/20">
+      <section className="py-24 px-6 bg-transparent">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20 animate-fade-in">
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-green-600 to-green-400 bg-clip-text text-transparent">
-              {t("team.heading")}
+            <h2 className="text-5xl font-bold mb-6 text-green-600">
+              {t ? t("team.heading") : "Team"}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              {t("team.description")}
+              {t ? t("team.description") : "A small team building big impact in agriculture."}
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -190,7 +180,7 @@ const About = () => {
                 </div>
                 <h3 className="text-xl font-bold mb-2">{member.name}</h3>
                 <p className="text-muted-foreground font-medium">
-                  {t(`team.members.${member.role}`)}
+                  {t ? t(`team.members.${member.role}`) : member.role}
                 </p>
               </div>
             ))}
@@ -203,26 +193,26 @@ const About = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-green-600/50 to-green-400/50 backdrop-blur-3xl" />
         <div className="max-w-5xl mx-auto text-center relative z-10 animate-fade-in">
           <h2 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">
-            {t("contact.heading")}
+            {t ? t("contact.heading") : "Get in touch"}
           </h2>
           <p className="text-xl md:text-2xl mb-12 text-green-50/95 leading-relaxed max-w-3xl mx-auto">
-            {t("contact.description")}
+            {t ? t("contact.description") : "Questions or pilot inquiries — we’re here to help."}
           </p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-12 mb-12">
             <div className="flex items-center gap-4 bg-green-50/10 backdrop-blur-md rounded-2xl px-8 py-5 hover:bg-green-50/20 transition-all duration-300">
               <Mail className="h-7 w-7 text-green-50" />
               <span className="text-green-50 text-lg font-medium">
-                {t("contact.email")}
+                {t ? t("contact.email") : "contact@yourproject.com"}
               </span>
             </div>
             <div className="flex items-center gap-4 bg-green-50/10 backdrop-blur-md rounded-2xl px-8 py-5 hover:bg-green-50/20 transition-all duration-300">
               <Phone className="h-7 w-7 text-green-50" />
               <span className="text-green-50 text-lg font-medium">
-                {t("contact.phone")}
+                {t ? t("contact.phone") : "+91 98765 43210"}
               </span>
             </div>
           </div>
-          <Button>{t("contact.button")}</Button>
+          <Button>{t ? t("contact.button") : "Contact Us"}</Button>
         </div>
       </section>
     </div>
