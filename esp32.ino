@@ -1,20 +1,18 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <AsyncTCP.h>
-//#include <ESPAsyncWebServer.h>
 #include <WebServer.h>
 #include "DHT.h"
 
 // ---------- Wi-Fi ----------
-const char* ssid = "Redmi Note 10 Lite";   // your hotspot SSID
-const char* password = "volcano354578";    // your hotspot password
+const char* ssid = "DON";
+const char* password = "harshit2315";
 
 // ---------- Flask server ----------
-const char* serverHost = "10.116.113.148";
+const char* serverHost = "192.168.0.108";
 const int serverPort = 5000;
 
 // ---------- DHT Sensor ----------
-#define DHTPIN 5
+#define DHTPIN 4              // ✅ DATA connected to GPIO 4
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -22,30 +20,28 @@ DHT dht(DHTPIN, DHTTYPE);
 const int soilAnalogPin = 34;
 
 // ---------- Web server ----------
-//AsyncWebServer server(80);
-
 WebServer server(80);
 
 // ---------- Sensor values ----------
-float temperature = 0;
-float humidity = 0;
+float temperature = 0.0;
+float humidity = 0.0;
 int soilMoisture = 0;
 int nitrogen = 0;
 int phosphorus = 0;
 int potassium = 0;
 
+// ---------- Wi-Fi ----------
 void connectToWiFi() {
   Serial.println("Initializing Wi-Fi...");
   WiFi.disconnect(true);
   delay(1000);
   WiFi.mode(WIFI_STA);
-  delay(2000);
 
   Serial.print("Connecting to Wi-Fi");
   WiFi.begin(ssid, password);
 
-  int maxRetries = 50;
-  while (WiFi.status() != WL_CONNECTED && maxRetries-- > 0) {
+  int retries = 50;
+  while (WiFi.status() != WL_CONNECTED && retries-- > 0) {
     delay(500);
     Serial.print(".");
   }
@@ -53,48 +49,63 @@ void connectToWiFi() {
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("\nConnected! IP: " + WiFi.localIP().toString());
   } else {
-    Serial.println("\nFailed to connect to Wi-Fi. Restarting...");
+    Serial.println("\nWi-Fi connection failed!");
   }
 }
 
 void setup() {
   Serial.begin(115200);
+
+  // ---------- DHT ----------
   dht.begin();
+  delay(2000);                 // ✅ REQUIRED warm-up for DHT11
+
   pinMode(soilAnalogPin, INPUT);
 
   connectToWiFi();
 
-  // Serve /live_data endpoint
- server.on("/live_data", []() {
-  String json = "{";
-  json += "\"Temperature\":" + String(temperature) + ",";
-  json += "\"Humidity\":" + String(humidity) + ",";
-  json += "\"Moisture\":" + String(soilMoisture) + ",";
-  json += "\"Nitrogen\":" + String(nitrogen) + ",";
-  json += "\"Phosphorus\":" + String(phosphorus) + ",";
-  json += "\"Potassium\":" + String(potassium);
-  json += "}";
-  server.send(200, "application/json", json);
-});
-server.begin();
+  // ---------- Optional ESP32 local endpoint ----------
+  server.on("/live_data", []() {
+    String json = "{";
+    json += "\"Temperature\":" + String(temperature) + ",";
+    json += "\"Humidity\":" + String(humidity) + ",";
+    json += "\"Moisture\":" + String(soilMoisture) + ",";
+    json += "\"Nitrogen\":" + String(nitrogen) + ",";
+    json += "\"Phosphorus\":" + String(phosphorus) + ",";
+    json += "\"Potassium\":" + String(potassium);
+    json += "}";
+    server.send(200, "application/json", json);
+  });
+
+  server.begin();
 }
 
 void loop() {
-  // ---------- Read sensors ----------
+  // ---------- Read DHT ----------
   float tempRead = dht.readTemperature();
-  float humRead = dht.readHumidity();
+  float humRead  = dht.readHumidity();
+
+  Serial.print("DHT Temp: ");
+  Serial.print(tempRead);
+  Serial.print(" °C | Hum: ");
+  Serial.println(humRead);
 
   if (!isnan(tempRead)) temperature = tempRead;
-  if (!isnan(humRead)) humidity = humRead;
+  if (!isnan(humRead))  humidity = humRead;
 
+  // ---------- Read Soil Moisture ----------
   int rawMoisture = analogRead(soilAnalogPin);
   Serial.print("Raw moisture value: ");
   Serial.println(rawMoisture);
 
+  // ✅ Simple mapping (works for your case)
   soilMoisture = map(rawMoisture, 4095, 0, 0, 100);
-  // ---------- Simulate NPK readings ----------
-  // If soilMoisture < 10, assume NPK sensor is disconnected → show 0
-  if (soilMoisture < 10) {
+  soilMoisture = constrain(soilMoisture, 0, 100);
+
+  if (soilMoisture < 5) soilMoisture = 0;
+
+  // ---------- Simulated NPK ----------
+  if (soilMoisture == 0) {
     nitrogen = 0;
     phosphorus = 0;
     potassium = 0;
@@ -104,7 +115,7 @@ void loop() {
     potassium = random(10, 35);
   }
 
-  // ---------- Prepare JSON ----------
+  // ---------- JSON ----------
   String jsonData = "{";
   jsonData += "\"Temperature\":" + String(temperature) + ",";
   jsonData += "\"Humidity\":" + String(humidity) + ",";
@@ -116,27 +127,25 @@ void loop() {
 
   Serial.println("Sending POST: " + jsonData);
 
-  // ---------- Send POST to Flask ----------
+  // ---------- POST to Flask ----------
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    String serverURL = String("http://") + serverHost + ":" + String(serverPort) + "/predict";
+    String serverURL = String("http://") + serverHost + ":" + serverPort + "/sensor_data";
     http.begin(serverURL);
     http.addHeader("Content-Type", "application/json");
 
-    int httpResponseCode = http.POST(jsonData);
-    if (httpResponseCode > 0) {
-      String response = http.getString();
-      Serial.println("Response: " + response);
+    int code = http.POST(jsonData);
+    if (code > 0) {
+      Serial.println("Response: " + http.getString());
     } else {
-      Serial.println("POST Error: " + String(httpResponseCode));
+      Serial.println("POST Error: " + String(code));
     }
     http.end();
   } else {
     Serial.println("Wi-Fi disconnected! Reconnecting...");
     connectToWiFi();
   }
-  
-    // ---------- Handle incoming web requests ----------
+
   server.handleClient();
-  delay(5000); // repeat every 5 seconds
+  delay(5000);   
 }

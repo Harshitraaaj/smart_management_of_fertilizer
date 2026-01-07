@@ -1,53 +1,58 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify ,session
+import pandas as pd
 import pickle
-<<<<<<< HEAD
-import numpy as np
-import random
-
-app = Flask(_name_)
-=======
 import re
 import numpy as np
 import random
-from langchain_openai import ChatOpenAI
+from langchain_perplexity import ChatPerplexity
 from dotenv import load_dotenv
+
 import os
 from flask_cors import CORS
+from Config import (
+    CROPS, SOILS,
+    CROP_REQUIREMENTS, SOIL_NPK
+)
 
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
->>>>>>> upstream/main
 
 # ---------- Load Models ----------
-model = pickle.load(open("xgb_pipeline.pkl", "rb"))
-fertname_dict = pickle.load(open("fertname_dict.pkl", "rb"))
-croptype_dict = pickle.load(open("croptype_dict.pkl", "rb"))
-soiltype_dict = pickle.load(open("soiltype_dict.pkl", "rb"))
+model_bundle = pickle.load(open("fertilizer_xgb_model.pkl", "rb"))
 
-# Reverse mapping for encoding
-crop_to_int = {v: k for k, v in croptype_dict.items()}
-soil_to_int = {v: k for k, v in soiltype_dict.items()}
+model = model_bundle["model"]
+scaler = model_bundle["scaler"]
+feature_columns = model_bundle["feature_columns"]
+le_target = model_bundle["le_target"]
 
-<<<<<<< HEAD
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    try:
-        data = request.get_json(force=True)
+def recommended_fertilizer(crop, soil):
+    crop_req = CROP_REQUIREMENTS[crop]
+    soil_npk = SOIL_NPK[soil]
 
-        # Handle environmental data or sensor failure
-        temperature = data.get("Temperature", 28)
-        humidity = data.get("Humidity", 65)
-        moisture = data.get("Moisture", data.get("SoilMoisture", 18))
+    deficiency = {
+        n: crop_req[n] - soil_npk[n]
+        for n in ["N", "P", "K"]
+        if crop_req[n] > soil_npk[n]
+    }
 
-        # Crop type and soil type from frontend (required)
-        crop_type = int(data['cropType'])
-        soil_type = int(data['soilType'])
+    if not deficiency:
+        return "Recommended Fertilizer: No fertilizer required"
 
-        # If NPK sensor fails, assign dummy values
-=======
+    if "N" in deficiency:
+        return "Recommended Fertilizer: Urea (Nitrogen deficiency)"
+    if "P" in deficiency:
+        return "Recommended Fertilizer: DAP (Phosphorus deficiency)"
+    if "K" in deficiency:
+        return "Recommended Fertilizer: MOP (Potassium deficiency)"
+
+    return "Recommended Fertilizer: Balanced NPK"
+
+
+
+
 # Store the latest crop & soil selected
 latest_selection = {}
 # Store latest sensor readings for /live_data
@@ -74,189 +79,79 @@ def format_points(text):
     formatted = [pt.strip() for pt in points if pt.strip()]
     return formatted if formatted else ["N/A"]
 
+app.secret_key = "your_secret_key"
+
 
 @app.route("/groq-chat", methods=["POST"])
 def groq_chat():
     user_input = request.json.get("message")
 
-    llm = ChatOpenAI(
-        base_url="https://api.groq.com/openai/v1",
-        model="llama-3.3-70b-versatile",
-        api_key=os.getenv("GROQ_API_KEY"),
-    )
+    # Initialize conversation history in session
+    if "history" not in session:
+        session["history"] = []
 
-    system_prompt = """
-You are an assistant that always responds in a clear, structured format for informative questions. Use the following sections only if they make sense:
+    # Append the new user message
+    session["history"].append({"role": "user", "content": user_input})
 
-**Answer:**
-- Main points in numbered format.
+    llm = ChatPerplexity()
 
-**Explanation:**
-- Explain the answer in numbered points if applicable. Skip if the question is trivial or conversational.
+    system_prompt = """You are a helpful assistant. Provide clear, concise answers. 
+For informative questions, structure your response naturally with explanations and examples when relevant and make sure that response is in this format
 
-**Example:**
-- Give an example in numbered points if relevant. Otherwise, write "N/A".
+Do NOT include references, citations, or numbers in brackets.
 
-Include line breaks between sections. Keep answers very concise, easy to read, and in points with space after each numbered point. For greetings or casual talk, just respond naturally without forcing Explanation or Example.
-"""
+Do NOT write long paragraphs.
 
-    response = llm.invoke(
-        [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_input},
-        ]
-    )
+Do NOT use tables unless explicitly asked.
 
+Write in simple, clear language.
+
+Structure the answer using headings and bullet points.
+
+Explain concepts step by step.
+
+Keep it suitable for students and general understanding.
+
+when ask hi,hello,how are you then do not give explanation give generic response like an assistant"""
+
+    # Pass last 10 messages for context
+    last_messages = session["history"][-10:]
+    llm_input = [{"role": "system", "content": system_prompt}]
+    for msg in last_messages:
+        llm_input.append({"role": msg["role"], "content": msg["content"]})
+
+    response = llm.invoke(llm_input)
     llm_text = response.content.strip()
 
-    # Plain text for greetings/casual messages
-    if "**Answer:**" not in llm_text:
-        return jsonify({"reply": llm_text})
+    # Append bot response to history
+    session["history"].append({"role": "assistant", "content": llm_text})
 
-    # Extract structured sections
-    answer_match = re.search(
-        r"\*\*Answer:\*\*\s*(.*?)\s*(\*\*Explanation:\*\*|$)", llm_text, re.DOTALL
-    )
-    explanation_match = re.search(
-        r"\*\*Explanation:\*\*\s*(.*?)\s*(\*\*Example:\*\*|$)", llm_text, re.DOTALL
-    )
-    example_match = re.search(r"\*\*Example:\*\*\s*(.*)", llm_text, re.DOTALL)
+    return jsonify({"reply": llm_text})
 
-    response_json = {
-        "answer": format_points(answer_match.group(1)) if answer_match else ["N/A"],
-        "explanation": (
-            format_points(explanation_match.group(1)) if explanation_match else ["N/A"]
-        ),
-        "example": format_points(example_match.group(1)) if example_match else ["N/A"],
-    }
+@app.route("/sensor_data", methods=["POST"])
+def sensor_data():
+    global latest_sensor_data
+    latest_sensor_data = request.json
+    return jsonify({"status": "sensor data stored"})
 
-    return jsonify(response_json)
 
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    try:
-        global latest_selection, latest_sensor_data
+    data = request.get_json()
 
-        # Read incoming data
-        data = request.get_json(force=True)
-        latest_selection = data
-        print("Received /predict data:", latest_selection, flush=True)
+    crop = data.get("cropType")
+    soil = data.get("soilType")
 
-        # Environmental and sensor data
-        temperature = data.get("Temperature", latest_sensor_data["Temperature"])
-        humidity = data.get("Humidity", latest_sensor_data["Humidity"])
-        moisture = data.get(
-            "Moisture", data.get("SoilMoisture", latest_sensor_data["Moisture"])
-        )
+    if crop not in CROPS or soil not in SOILS:
+        return jsonify({"error": "Invalid crop or soil type"}), 400
 
-        # Crop and soil type
-        crop_type = data.get("cropType", 0)
-        soil_type = data.get("soilType", 0)
-
-        soil_val = (
-            soil_type if isinstance(soil_type, int) else soil_to_int.get(soil_type, 0)
-        )
-        crop_val = (
-            crop_type if isinstance(crop_type, int) else crop_to_int.get(crop_type, 0)
-        )
-
-        # NPK values (random if missing)
->>>>>>> upstream/main
-        nitrogen = data.get("Nitrogen", random.randint(30, 60))
-        phosphorus = data.get("Phosphorus", random.randint(15, 40))
-        potassium = data.get("Potassium", random.randint(10, 35))
-
-<<<<<<< HEAD
-        # Encode categorical inputs
-        soil_val = soil_type if isinstance(soil_type, int) else soil_to_int.get(soil_type, 0)
-        crop_val = crop_type if isinstance(crop_type, int) else crop_to_int.get(crop_type, 0)
-
-        # Prepare features in correct order for the model
-        features = np.array([[temperature, humidity, moisture,
-                              soil_val, crop_val, nitrogen, phosphorus, potassium]])
-
-        # Predict fertilizer
-        pred_label = int(model.predict(features)[0])
-        fertilizer = fertname_dict[pred_label]
-
-        # Return JSON with all details for frontend graph/UI
-        return jsonify({
-            "Temperature": temperature,
-            "Humidity": humidity,
-            "Moisture": moisture,
-            "Soil Type": soil_type,
-            "Crop Type": crop_type,
-            "Nitrogen": nitrogen,
-            "Phosphorus": phosphorus,
-            "Potassium": potassium,
-            "predicted_fertilizer": fertilizer
-        })
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/')
-def home():
     return jsonify({
-        "message": "Smart Fertilizer Recommendation API (Test Mode)",
-        "note": "If NPK sensor fails, random dummy values are used for Nitrogen, Phosphorus, Potassium"
+        "crop": crop,
+        "soil": soil,
+        "recommended_fertilizer": recommended_fertilizer(crop, soil)
     })
 
-
-if _name_ == '_main_':
-    app.run(debug=True)
-=======
-        # Update latest sensor data
-        latest_sensor_data.update(
-            {
-                "Temperature": temperature,
-                "Humidity": humidity,
-                "Moisture": moisture,
-                "Nitrogen": nitrogen,
-                "Phosphorus": phosphorus,
-                "Potassium": potassium,
-            }
-        )
-
-        # Prepare features for model
-        features = np.array(
-            [
-                [
-                    temperature,
-                    humidity,
-                    moisture,
-                    soil_val,
-                    crop_val,
-                    nitrogen,
-                    phosphorus,
-                    potassium,
-                ]
-            ]
-        )
-
-        pred_label = int(model.predict(features)[0])
-        fertilizer = fertname_dict.get(pred_label, "Unknown")
-        print("Predicted Fertilizer:", fertilizer)
-
-        return jsonify(
-            {
-                "Temperature": temperature,
-                "Humidity": humidity,
-                "Moisture": moisture,
-                "Soil Type": soil_type,
-                "Crop Type": crop_type,
-                "Nitrogen": nitrogen,
-                "Phosphorus": phosphorus,
-                "Potassium": potassium,
-                "predicted_fertilizer": fertilizer,
-            }
-        )
-
-    except Exception as e:
-        print("Error in /predict:", e)
-        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/live_data", methods=["GET"])
@@ -277,4 +172,3 @@ def home():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
->>>>>>> upstream/main

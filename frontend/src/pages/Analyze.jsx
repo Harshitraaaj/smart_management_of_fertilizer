@@ -6,13 +6,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 
 export default function Analyze() {
-  const { t } = useTranslation("analyze"); // Use analyze namespace
+  const { t } = useTranslation("analyze");
 
   const [npk, setNpk] = useState({ N: 0, P: 0, K: 0 });
   const [temp, setTemp] = useState(0);
   const [moisture, setMoisture] = useState(0);
   const [humidity, setHumidity] = useState(0);
   const [predictedFertilizer, setPredictedFertilizer] = useState(null);
+  const [npkZeroed, setNpkZeroed] = useState(false);
+  const [originalNpk, setOriginalNpk] = useState({ N: 0, P: 0, K: 0 });
 
   const [soilType, setSoilType] = useState("Loamy");
   const [cropType, setCropType] = useState("Wheat");
@@ -20,86 +22,99 @@ export default function Analyze() {
     try {
       const raw = localStorage.getItem("sf_history");
       return raw ? JSON.parse(raw) : [];
-    } catch (e) {
+    } catch {
       return [];
     }
   });
+
+useEffect(() => {
+  if (!predictedFertilizer) return;
+
+  const timer = setTimeout(() => {
+    setPredictedFertilizer(null);
+  }, 5000);
+
+  return () => clearTimeout(timer);
+}, [predictedFertilizer]);
+
 
   useEffect(() => {
     localStorage.setItem("sf_history", JSON.stringify(history));
   }, [history]);
 
-  useEffect(() => {
-    const fetchLiveData = () => {
-      fetch("http://10.116.113.148:5000/live_data")
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to fetch live data");
-          return res.json();
-        })
-        .then((data) => {
-          setTemp(data.Temperature);
-          setHumidity(data.Humidity);
-          setMoisture(data.Moisture);
-          setNpk({
-            N: data.Nitrogen,
-            P: data.Phosphorus,
-            K: data.Potassium,
-          });
-        })
-        .catch((err) => console.error("Error fetching live sensor data:", err));
-    };
-
-    fetchLiveData();
-    const interval = setInterval(fetchLiveData, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    const payload = { cropType, soilType };
-
-    fetch("http://10.116.113.148:5000/predict", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Network response was not ok");
-        return res.json();
-      })
+ useEffect(() => {
+  const fetchLiveData = () => {
+    fetch("http://localhost:5000/live_data")
+      .then((res) => res.json())
       .then((data) => {
         setTemp(data.Temperature);
         setHumidity(data.Humidity);
         setMoisture(data.Moisture);
-        setNpk({
+
+        const newNpk = {
           N: data.Nitrogen,
           P: data.Phosphorus,
           K: data.Potassium,
-        });
-        setPredictedFertilizer(data.predicted_fertilizer);
-
-        const record = {
-          id: Date.now(),
-          timestamp: new Date().toLocaleString(),
-          cropType,
-          soilType,
-          npk: {
-            N: data.Nitrogen,
-            P: data.Phosphorus,
-            K: data.Potassium,
-          },
-          temp: data.Temperature,
-          moisture: data.Moisture,
-          humidity: data.Humidity,
         };
-        setHistory((h) => [record, ...h]);
+
+        setNpk(newNpk);
+        if (!npkZeroed) setOriginalNpk(newNpk);
       })
-      .catch((err) => console.error("Error calling /predict:", err));
-  }
+      .catch((err) => console.error("Live data error:", err));
+  };
+
+  fetchLiveData();
+  const interval = setInterval(fetchLiveData, 3000);
+  return () => clearInterval(interval);
+}, [npkZeroed]); 
+
+
+  function handleSubmit(e) {
+  e.preventDefault();
+
+  fetch("http://localhost:5000/predict", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ cropType, soilType }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+    
+      setPredictedFertilizer(data.recommended_fertilizer);
+
+    
+      const record = {
+        id: Date.now(),
+        timestamp: new Date().toLocaleString(),
+        cropType,
+        soilType,
+        npk,         
+        temp,
+        moisture,
+        humidity,
+      };
+
+      setHistory((h) => [record, ...h]);
+    })
+    .catch((err) => console.error("Error calling /predict:", err));
+}
+
 
   function handleClearHistory() {
     setHistory([]);
   }
+
+  function toggleNpkZero() {
+    if (npkZeroed) {
+      setNpk(originalNpk);
+      setNpkZeroed(false);
+    } else {
+      setNpk({ N: 0, P: 0, K: 0 });
+      setNpkZeroed(true);
+    }
+  }
+
+
 
   const CircularGauge = ({
     label,
@@ -218,7 +233,7 @@ export default function Analyze() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
                   transition={{ duration: 0.4 }}
-                  className="mt-4 w-full max-w-2xl bg-green-100 border border-green-300 text-green-800 px-6 py-3 rounded-lg shadow-md text-center"
+                  className="mt-4 mb-2 w-full max-w-2xl bg-green-100 border border-green-300 text-green-800 px-8 py-3 rounded-lg shadow-md text-center"
                 >
                   <h2 className="text-lg font-semibold">
                     {t("predictedFertilizer")}
@@ -339,6 +354,14 @@ export default function Analyze() {
             </div>
           </section>
         </div>
+
+        <button
+          onClick={toggleNpkZero}
+          className="fixed bottom-6 right-6 w-12 h-12 rounded-full bg-gray-200 hover:bg-gray-300 opacity-30 flex items-center justify-center text-gray-600"
+          title={npkZeroed ? "Restore NPK" : "Zero NPK"}
+        >
+          <span className="text-xs font-mono">{npkZeroed ? "R" : "0"}</span>
+        </button>
       </div>
     </div>
   );

@@ -1,22 +1,17 @@
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import ChatBot from "./ChatBot";
+
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
-    {
-      role: "bot",
-      content: {
-        answer: ["Welcome! How can I help you?"],
-        explanation: [],
-        example: [],
-      },
-    },
+    { role: "bot", text: "Welcome! How can I help you?" },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const chatContainerRef = useRef(null); // For auto-scroll
+  const chatContainerRef = useRef(null);
 
   // Auto-scroll when messages change
   useEffect(() => {
@@ -42,23 +37,10 @@ export default function ChatWidget() {
       });
 
       const data = await response.json();
-
-      let botMessage;
-
-      if (data?.reply) {
-        botMessage = { role: "bot", text: data.reply };
-      } else if (data?.answer || data?.explanation || data?.example) {
-        botMessage = { role: "bot", content: data };
-      } else {
-        botMessage = {
-          role: "bot",
-          content: {
-            answer: ["Sorry, something went wrong."],
-            explanation: [],
-            example: [],
-          },
-        };
-      }
+      const botMessage = {
+        role: "bot",
+        text: data.reply || "Sorry, something went wrong.",
+      };
 
       setMessages((prev) => [...prev, botMessage]);
     } catch (err) {
@@ -82,89 +64,167 @@ export default function ChatWidget() {
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-6 w-80 h-96 bg-white border border-gray-300 rounded-lg shadow-lg flex flex-col overflow-hidden z-50">
-          <div className="bg-emerald-600 text-white px-4 py-2 font-semibold">
-            Chat Support
+        <div className="fixed bottom-24 right-6 w-96 h-[32rem] bg-white border border-gray-300 rounded-lg shadow-lg flex flex-col overflow-hidden z-50">
+          <div className="bg-emerald-600 text-white px-4 py-3 font-semibold flex items-center justify-between">
+            <span>Chat Support</span>
+            <button
+              onClick={() => setOpen(false)}
+              className="text-white hover:text-gray-200"
+            >
+              ✕
+            </button>
           </div>
 
           {/* Chat messages */}
           <div
-            className="flex-1 p-2 overflow-auto flex flex-col gap-2"
-            ref={chatContainerRef} // Attach ref for auto-scroll
+            className="flex-1 p-3 overflow-auto flex flex-col gap-3"
+            ref={chatContainerRef}
           >
-            {messages.map((msg, idx) =>
-              msg.role === "bot" ? (
-                msg.text ? (
-                  <div
-                    key={idx}
-                    className="bg-gray-100 text-gray-800 self-start px-3 py-2 rounded-md text-sm"
-                  >
-                    {msg.text}
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`px-4 py-2 rounded-lg text-sm ${
+                  msg.role === "bot"
+                    ? "bg-gray-100 text-gray-800 self-start max-w-[90%]"
+                    : "bg-emerald-600 text-white self-end max-w-[85%]"
+                }`}
+              >
+                {msg.role === "bot" ? (
+                  <div className="markdown-content">
+                    <ReactMarkdown
+                      components={{
+                        h1: ({ node, ...props }) => (
+                          <h1
+                            className="text-lg font-bold mb-2 mt-3"
+                            {...props}
+                          />
+                        ),
+                        h2: ({ node, ...props }) => (
+                          <h2
+                            className="text-base font-bold mb-2 mt-3"
+                            {...props}
+                          />
+                        ),
+                        h3: ({ node, ...props }) => (
+                          <h3
+                            className="text-sm font-bold mb-1 mt-2"
+                            {...props}
+                          />
+                        ),
+                        h4: ({ node, ...props }) => (
+                          <h4
+                            className="text-sm font-semibold mb-1 mt-2"
+                            {...props}
+                          />
+                        ),
+                        p: ({ node, ...props }) => (
+                          <p className="mb-2 leading-relaxed" {...props} />
+                        ),
+                        ul: ({ node, ...props }) => (
+                          <ul
+                            className="list-disc list-inside mb-2 ml-2 space-y-1"
+                            {...props}
+                          />
+                        ),
+                        ol: ({ node, ...props }) => (
+                          <ol
+                            className="list-decimal list-inside mb-2 ml-2 space-y-1"
+                            {...props}
+                          />
+                        ),
+                        li: ({ node, ...props }) => (
+                          <li className="leading-relaxed" {...props} />
+                        ),
+                        strong: ({ node, ...props }) => (
+                          <strong className="font-semibold" {...props} />
+                        ),
+                        em: ({ node, ...props }) => (
+                          <em className="italic" {...props} />
+                        ),
+                        code: ({ node, inline, ...props }) =>
+                          inline ? (
+                            <code
+                              className="bg-gray-200 px-1 rounded text-xs"
+                              {...props}
+                            />
+                          ) : (
+                            <code
+                              className="block bg-gray-200 p-2 rounded text-xs my-2 overflow-x-auto"
+                              {...props}
+                            />
+                          ),
+                        table: ({ node, ...props }) => (
+                          <table
+                            className="w-full border-collapse mb-2"
+                            {...props}
+                          />
+                        ),
+                        thead: ({ node, ...props }) => (
+                          <thead className="bg-gray-200" {...props} />
+                        ),
+                        th: ({ node, ...props }) => (
+                          <th
+                            className="border border-gray-300 px-2 py-1 text-left text-xs font-semibold"
+                            {...props}
+                          />
+                        ),
+                        td: ({ node, ...props }) => (
+                          <td
+                            className="border border-gray-300 px-2 py-1 text-xs"
+                            {...props}
+                          />
+                        ),
+                        hr: ({ node, ...props }) => (
+                          <hr className="my-2 border-gray-300" {...props} />
+                        ),
+                      }}
+                    >
+                      {msg.text}
+                    </ReactMarkdown>
                   </div>
                 ) : (
-                  <div
-                    key={idx}
-                    className="bg-gray-100 text-gray-800 self-start px-3 py-2 rounded-md text-sm flex flex-col gap-2"
-                  >
-                    {msg.content.answer?.length > 0 && (
-                      <ul className="list-disc list-inside ml-4">
-                        {msg.content.answer.map((pt, i) => (
-                          <ul key={i}>{pt}</ul>
-                        ))}
-                      </ul>
-                    )}
-                    {msg.content.explanation?.length > 0 && (
-                      <div>
-                        <strong>Explanation:</strong>
-                        <ul className="list-disc list-inside ml-4">
-                          {msg.content.explanation.map((pt, i) => (
-                            <ul key={i}>{pt}</ul>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {msg.content.example?.length > 0 && (
-                      <div>
-                        <strong>Example:</strong>
-                        <ul className="list-disc list-inside ml-4">
-                          {msg.content.example.map((pt, i) => (
-                            <ul key={i}>{pt}</ul>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                )
-              ) : (
-                <div
-                  key={idx}
-                  className="bg-emerald-600 text-white self-end px-3 py-2 rounded-md text-sm"
-                >
-                  {msg.text}
-                </div>
-              )
-            )}
+                  msg.text
+                )}
+              </div>
+            ))}
 
             {/* Typing indicator */}
             {loading && (
-              <div className="text-gray-500 text-sm animate-pulse">
-                Bot is typing...
+              <div className="flex items-center gap-2 text-gray-500 text-sm">
+                <div className="flex gap-1">
+                  <span
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  ></span>
+                  <span
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "150ms" }}
+                  ></span>
+                  <span
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "300ms" }}
+                  ></span>
+                </div>
+                <span>Bot is typing...</span>
               </div>
             )}
           </div>
 
-          <div className="p-2 border-t border-gray-200 flex gap-2">
+          <div className="p-3 border-t border-gray-200 flex gap-2">
             <input
               type="text"
               value={input}
               placeholder="Type a message..."
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              className="flex-1 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              onKeyDown={(e) =>
+                e.key === "Enter" && !e.shiftKey && sendMessage()
+              }
+              className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
             <button
               onClick={sendMessage}
-              className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700"
+              disabled={loading}
+              className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Send
             </button>
